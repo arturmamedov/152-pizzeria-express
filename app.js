@@ -9,6 +9,7 @@ const pizzasRouter = require("./routers/pizzas");
 
 // middlewares
 app.use(express.static("public"));
+app.use(express.json());
 
 // routers
 app.use("/docs", docsRouter);
