@@ -1,4 +1,5 @@
 // * Importo il finto database sotto forma di array di oggetti "pizza"
+const fs = require("fs");
 let pizzasData = require("../data/pizzas");
 
 /**
@@ -96,22 +97,14 @@ function show(req, res) {
 }
 
 function store(req, res) {
-  // * valido i dati del body (validazione di tutti i campi con "true")
-  const validationResult = validatePizzaBody(req.body, true);
-
-  // * se il campo "success" della validazione NON è "true"
-  if (!validationResult.success) {
-    // * la richiesta era malformata.
-    // * invio risposta di errore con codice 400 "bad request"
-    return res.status(400).json(validationResult);
-  }
-
   // * copio l'array del "database" per poterlo manipolare senza
   // * compromettere i dati a runtime
   let pizzas = [...pizzasData];
 
   // * estraggo dal body i campi validati
-  const { name, image, ingredients } = req.body;
+  const { name, ingredients } = req.body;
+  const { filename } = req.file;
+  const image = "imgs/pizze/" + filename;
 
   // * calcolo l'id della nuova pizza (maxId + 1)
   let maxId = 0;
@@ -149,16 +142,6 @@ function update(req, res) {
   // * compromettere i dati a runtime
   let pizzas = [...pizzasData];
 
-  // * valido i dati del body (validazione di tutti i campi con "true")
-  const validationResult = validatePizzaBody(req.body, true);
-
-  // * se il campo "success" della validazione NON è "true"
-  if (!validationResult.success) {
-    // * la richiesta era malformata.
-    // * invio risposta di errore con codice 400 "bad request"
-    return res.status(400).json(validationResult);
-  }
-
   // * recupero l'id della richiesta e lo parso come intero
   const pizzaId = parseInt(req.params.id);
 
@@ -178,10 +161,20 @@ function update(req, res) {
     return res.status(404).json(responseData);
   }
 
+  // * cancello la sua immagine
+  const imagePath = "./public/" + pizza.image;
+  fs.unlink(imagePath, (err) => {
+    if (err) throw err;
+    console.log("File deleted successfully");
+  });
+
   // * se sono arrivato qui, tutte le validazioni sono passate
   // * posso sostutituire tutti i dati della pizza recuperata precedentemente per id
+  const { filename } = req.file;
+  const image = "imgs/pizze/" + filename;
+
   pizza.name = req.body.name;
-  pizza.image = req.body.image;
+  pizza.image = image;
   pizza.ingredients = req.body.ingredients;
 
   // * costruisco la risposta di successo
@@ -200,17 +193,6 @@ function modify(req, res) {
   // * copio l'array del "database" per poterlo manipolare senza
   // * compromettere i dati a runtime
   let pizzas = [...pizzasData];
-
-  // * valido i dati del body
-  // * validazione parziale, solo dei campi effettivamente nel body, con "false"
-  const validationResult = validatePizzaBody(req.body, false);
-
-  // * se il campo "success" della validazione NON è "true"
-  if (!validationResult.success) {
-    // * la richiesta era malformata.
-    // * invio risposta di errore con codice 400 "bad request"
-    return res.status(400).json(validationResult);
-  }
 
   // * recupero l'id della richiesta e lo parso come intero
   const pizzaId = parseInt(req.params.id);
@@ -268,17 +250,12 @@ function destroy(req, res) {
   // * NB: non è detto che sia stata recuperata una pizza
   const pizza = pizzas.find((pizza) => pizza.id === pizzaId);
 
-  // * se la pizza non è stata trovata
-  if (!pizza) {
-    // * preparo risposta di errore "not found"
-    const responseData = {
-      message: `Pizza ${pizzaId} non trovata`,
-      success: false,
-    };
-
-    // * invio risposta di errore con codice 404
-    return res.status(404).json(responseData);
-  }
+  // * cancello la sua immagine
+  const imagePath = "./public/" + pizza.image;
+  fs.unlink(imagePath, (err) => {
+    if (err) throw err;
+    console.log("File deleted successfully");
+  });
 
   // * se ho trovato la pizza, la filtro via dall'array delle pizze
   // * poi "sovrascrivo" il "database" con l'array aggiornato
@@ -295,101 +272,6 @@ function destroy(req, res) {
   // * invio la risposta di successo
   res.json(responseData);
 }
-
-/**
- *
- * @param {*} body il body della risposta
- * @param {*} validateEveryField  booleano che forza la validazione per i campi non ricevuti
- * @returns {object} ha sempre un "message" e chieve "success" con valore "true" se la validazione è passata. altrimenti "false"
- */
-const validatePizzaBody = (body, validateEveryField = true) => {
-  // * se non c'è il body, la richiesta non è validabile
-  if (!body) {
-    // * se la validazione non è passata
-    // * invio risposta con chiave "success" impostata su "false"
-    return {
-      message: `Payload non leggibile`,
-      success: false,
-    };
-  }
-
-  // * se il body è valido
-  // * recupero dal body gli elementi da validare
-  const { name, image, ingredients } = body;
-
-  // * copio l'array del "database" per poterlo manipolare senza
-  // * compromettere i dati a runtime
-  let pizzas = [...pizzasData];
-
-  // * controllo se la validazione è forzata su tutti i campi
-  // * o se è stato ricevuto il campo "name".
-  // * se una delle due è vera, procedo a validarlo
-  if (validateEveryField || name !== undefined) {
-    // * per il campo "name", la validazione non passa se il campo non esiste
-    // * oppure se il campo non è una stringa
-    if (!name || typeof name !== "string") {
-      // * se la validazione non è passata
-      // * invio risposta con chiave "success" impostata su "false"
-      return {
-        message: `Name non valido`,
-        success: false,
-      };
-    }
-
-    // * per il campo "name", la validazione non passa se il campo non è "unico"
-    // * perciò controllo su tutte le pizze se il nome corrisponde a quello di un'altra
-    if (pizzas.some((pizza) => pizza.name === name)) {
-      // * se la validazione non è passata
-      // * invio risposta con chiave "success" impostata su "false"
-      return {
-        message: `Name pizza già esistente`,
-        success: false,
-      };
-    }
-  }
-
-  // * controllo se la validazione è forzata su tutti i campi
-  // * o se è stato ricevuto il campo "image".
-  // * se una delle due è vera, procedo a validarlo
-  if (validateEveryField || image !== undefined) {
-    // * per il campo "image", la validazione non passa se il campo non esiste
-    // * oppure se il campo non è una stringa
-    if (!image || typeof image !== "string") {
-      // * se la validazione non è passata
-      // * invio risposta con chiave "success" impostata su "false"
-      return {
-        message: `Path immagine non valido`,
-        success: false,
-      };
-    }
-  }
-
-  // * controllo se la validazione è forzata su tutti i campi
-  // * o se è stato ricevuto il campo "ingredients".
-  // * se una delle due è vera, procedo a validarlo
-  if (validateEveryField || ingredients !== undefined) {
-    // * per il campo "ingredients", la validazione non passa se il campo non esiste
-    // * oppure se il campo non è un array
-    // * oppure se l'array è vuoto
-    // TODO: controllare che gli elementi siano tutte stringhe
-    // TODO: e che non siano vuoti
-    if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-      // * se la validazione non è passata
-      // * invio risposta con chiave "success" impostata su "false"
-      return {
-        message: `Ingredienti non validi`,
-        success: false,
-      };
-    }
-  }
-
-  // * se sono arrivato qui, tutte le validazioni sono passate
-  // * invio risposta con chiave "success" impostata su "true"
-  return {
-    message: `Parametri validi`,
-    success: true,
-  };
-};
 
 const buildPizzaObject = (pizza) => {
   const imageAbsolutePath = "http://localhost:3000/" + pizza.image;

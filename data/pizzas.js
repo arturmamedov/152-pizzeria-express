@@ -26,7 +26,7 @@ const pizzas = [
   {
     id: 8,
     name: "4 formaggi",
-    image: "imgs/pizze/4_formaggi.jpeg",
+    image: "imgs/pizze/5_formaggi.jpeg",
     ingredients: ["pomodoro", "mozzarella", "gorgonzola", "parmigiano", "ricotta"],
   },
 ];
