@@ -24,7 +24,7 @@ function index(req, res) {
         res.json({
             success: true,
             message: 'Lista della pizze',
-            result: results
+            result: results.map(pizza => buildPizzaObject(pizza))
         });
     });
 }
