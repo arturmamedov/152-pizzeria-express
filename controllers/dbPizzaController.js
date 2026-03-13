@@ -89,8 +89,32 @@ function show(req, res) {
 }
 
 function store(req, res) {
-    // * invio la risposta di successo
-    res.status(201).json({});
+    //recuperiamo i dati dal corpo della richiesta
+    const { name, image } = req.body;
+    // prepariamo la query
+    const sql = 'INSERT INTO pizzas (name, image) VALUES (?, ?)';
+
+    // eseguiamo la query
+    connection.query(
+        sql,
+        [name, image],
+        (err, results) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to insert pizza'
+                });
+            }
+
+            // console.log(results)
+
+            res.status(201).json({
+                success: true,
+                message: 'Pizza inserita',
+                id: results.insertId // restituiamo l'id assegnato dal DB (Auto Increment)
+            });
+        }
+    );
 }
 
 function update(req, res) {
