@@ -118,8 +118,31 @@ function store(req, res) {
 }
 
 function update(req, res) {
-    // * invio la risposta di successo
-    res.json({});
+    // recuperiamo l'id dall' URL
+    const { id } = req.params;
+
+    // recuperiamo i dati dal body della richiesta
+    const { name, image } = req.body;
+
+    const sql = 'UPDATE pizzas SET name = ?, image = ? WHERE id = ?';
+
+    // Prepariamo la query per aggiornare la pizza
+    connection.query(sql,
+        [name, image, id],
+        (err, results) => {
+            if (err) return res.status(500).json({
+                success: false,
+                message: 'Failed to update pizza'
+            });
+
+            // console.log(results);
+
+            res.json({
+                success: true,
+                message: 'Pizza updated successfully'
+            });
+        }
+    );
 }
 
 function modify(req, res) {
