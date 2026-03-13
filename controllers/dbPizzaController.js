@@ -78,10 +78,10 @@ function show(req, res) {
             // Aggoiungiamo gli ingredienti alla pizza
             pizza.ingredients = ingredientsResults;
 
-        // * invio la risposta di successo
-        res.json({
-            success: true,
-            message: `Dettaglio della pizza ${results[0].id}: ${results[0].name}`,
+            // * invio la risposta di successo
+            res.json({
+                success: true,
+                message: `Dettaglio della pizza ${results[0].id}: ${results[0].name}`,
                 result: buildPizzaObject(pizza)
             });
         });
@@ -176,7 +176,7 @@ function destroy(req, res) {
                 });
         }
 
-    // * invio la risposta di successo
+        // * invio la risposta di successo
         res.json({
             success: true,
             message: `Eliminazione della pizza ${id}`

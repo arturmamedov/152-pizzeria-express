@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pizzaController = require("../controllers/pizzaController");
+const pizzaController = require("../controllers/dbPizzaController");
 const validatePizza = require("../middlewares/validatePizza");
 const sleeptimeMiddleware = require("../middlewares/sleeptime");
 const pizzaUpload = require("../middlewares/pizzaUpload");
