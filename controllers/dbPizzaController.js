@@ -154,8 +154,34 @@ function modify(req, res) {
 }
 
 function destroy(req, res) {
+    // recuperiamo l'id dall' URL 
+    const { id } = req.params;
+    const sql = 'DELETE FROM pizzas WHERE id = ?';
+
+    //Eliminiamo la pizza dal menu                       
+    connection.query(sql, [id], (err, results) => {
+        if (err) {
+            return res.status(500)
+                .json({
+                    success: false,
+                    message: 'Failed to delete pizza'
+                });
+        }
+
+        if (results.affectedRows == 0) {
+            return res.status(404)
+                .json({
+                    success: false,
+                    message: 'Pizza not found'
+                });
+        }
+
     // * invio la risposta di successo
-    res.json({});
+        res.json({
+            success: true,
+            message: `Eliminazione della pizza ${id}`
+        })
+    });
 }
 
 const buildPizzaObject = (pizza) => {
