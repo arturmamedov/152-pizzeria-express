@@ -147,7 +147,10 @@ function update(req, res) {
 
 function modify(req, res) {
     // * invio la risposta di successo
-    res.json({});
+    res.json({
+        success: false,
+        message: 'This route method still need to be implemented for DB layer.'
+    });
 }
 
 function destroy(req, res) {
