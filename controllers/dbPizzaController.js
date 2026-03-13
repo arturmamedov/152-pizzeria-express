@@ -35,6 +35,14 @@ function show(req, res) {
 
     const sql = 'SELECT * FROM pizzas WHERE id = ?';
 
+    // Prepariamo la query per gli ingredienti aiutandoci con una join e Where
+    const ingredientsSql = `
+        SELECT I.*
+        FROM ingredients AS I
+        JOIN ingredient_pizza AS IP ON I.id = IP.ingredient_id
+        WHERE IP.pizza_id = ?
+    `;
+
     connection.query(sql, [id], function (err, results) {
         if (err) {
             return res.status(500).json({
@@ -50,11 +58,32 @@ function show(req, res) {
             });
         }
 
+        // * salvo la pizza in una variabile
+        // { "id": 1,"name": "Margherita","image": "margherita.webp" }
+        const pizza = results[0];
+        // console.log(pizza)
+
+        // Se è andata bene, eseguiamo la seconda query per gli ingredienti
+        connection.query(ingredientsSql, [id], (err, ingredientsResults) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Database query failed'
+                });
+            }
+
+            // console.log('ingredients')
+            // console.log(ingredientsResults)
+
+            // Aggoiungiamo gli ingredienti alla pizza
+            pizza.ingredients = ingredientsResults;
+
         // * invio la risposta di successo
         res.json({
             success: true,
             message: `Dettaglio della pizza ${results[0].id}: ${results[0].name}`,
-            result: results
+                result: buildPizzaObject(pizza)
+            });
         });
     })
 }
